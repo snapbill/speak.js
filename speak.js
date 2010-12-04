@@ -49,6 +49,13 @@ server.listen(function(client) {
         channel.addClient(client);
       });
     }
+
+    // Exit after timeout if one is provided
+    if (client.param['timeout']) {
+      setTimeout(function() {
+        if (!client.closed) client.reply_messages([]);
+      }, client.param['timeout']);
+    }
   }else{
     return client.reply({"result":"Correct commands on /read, /write, /introduce, /test and /create"});
   }
