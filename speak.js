@@ -1,11 +1,17 @@
 #!/usr/local/bin/node
 var server = require('./server'),
     message = require('./message'),
+    config = require("./config"),
     channel = require('./channel');
 
 var write = function(param, response) {
 
 }
+
+setInterval(function() {
+  channel.garbageCollect();
+}, (config.get('garbageCollection') || 20)*1000);
+
 
 server.listen(function(client) {
   if (client.url == '/write') {
