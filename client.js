@@ -26,7 +26,6 @@ exports.client = function(url, param, response) {
     var last_id = 0;
     messages = messages.map(function(message) {
       if (message.id > last_id) last_id = message.id;
-      console.log(message);
       return {
         'message': message.text,
         'channel': message.channel,

@@ -5,14 +5,11 @@ var sys = require("sys"),
     url = require("url"),  
     fs = require("fs"),  
     crypto = require("crypto"),
+    config = require("./config"),
     client = require("./client").client;  
   
 
-var keys = {
-  'key':   '/www/snapbill/keys/ssl.key/snapbill.com.key',
-  'cert':  '/www/snapbill/keys/ssl.key/snapbill.com.crt',
-  'ca':    '/www/snapbill/keys/ssl.key/DigiCertCA.crt'
-};
+var keys = config.get('ssl');
 
 // Load in the keys from file paths
 for (k in keys) keys[k] = fs.readFileSync(keys[k]).toString();
@@ -40,8 +37,13 @@ var createServer = function(options, clientHandler) {
     });  
   
   });
-  server.listen(options['port']);
+	console.log('Listen on '+options['host']+':'+options['port']);
+  server.listen(options['port'], options['host']);
 };
 
-exports.listen = function(port, handler) { createServer({'port': port}, handler); }
-exports.listenSSL = function(port, handler) { createServer({'port': port,  'credentials': credentials}, handler); }
+exports.listen = function(handler) {
+	config.get('servers').forEach(function(server) {
+		if (server['ssl']) server['credentials'] = credentials;
+		createServer(server, handler);
+	});
+};

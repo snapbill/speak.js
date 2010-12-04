@@ -1,3 +1,4 @@
+#!/usr/local/bin/node
 var server = require('./server'),
     message = require('./message'),
     channel = require('./channel');
@@ -6,9 +7,7 @@ var write = function(param, response) {
 
 }
 
-var request = function(client) {
-  console.log(client.param);
-
+server.listen(function(client) {
   if (client.url == '/write') {
     if (!client.param['message']) return client.reply({'result':'Include a message to write'});
     if (!client.param['channel']) return client.reply({'result':'Include a channel to write'});
@@ -27,7 +26,6 @@ var request = function(client) {
 
     channels = channels.map(channel.open);
 
-    console.log(channels);
     var messages = [];
 
     if (client.param['from_id'] != undefined) {
@@ -48,7 +46,4 @@ var request = function(client) {
   }else{
     return client.reply({"result":"Correct commands on /read, /write, /introduce, /test and /create"});
   }
-};
-
-server.listen(7732, request);
-server.listenSSL(443, request);
+});
