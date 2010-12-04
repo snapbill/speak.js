@@ -1,4 +1,5 @@
-var config = require('./config');
+var config = require('./config'),
+    message = require('./message');
 
 var channels = {};
 
@@ -7,6 +8,7 @@ var channel = function(name) {
   self.name = name;
 
   self.clients = [];
+  self.sessions = {};
   self.messageHead = null;
   self.messageTail = null;
 
@@ -26,17 +28,51 @@ var channel = function(name) {
     if (self.messageHead == null) self.messageTail = null;
   }
 
+  self.addSession = function(session) {
+    console.log('#'+self.name+' joined: '+session.id+' ('+session.introduction+')');
+    self.addMessage(message.join(
+      session.introduction,
+      self,
+      session
+    ));
+    if (session.id in self.sessions) {
+      return false;
+    }else{
+      self.sessions[session.id] = session;
+      return true;
+    }
+  };
+  self.removeSession = function(session, text) {
+    console.log('#'+self.name+' quit: '+session.id+' ('+text+')');
+    self.addMessage(message.quit(
+      text,
+      self,
+      session
+    ));
+    delete self.sessions[session.id];
+  }
   self.read = function(from_id) {
-    // Quick exit if there are no messages >= from_id
-    if (!self.messageTail || self.messageTail.id < from_id) return [];
-
     var messages = [];
-    var message = self.messageHead;
 
-    // Skip over any messages with too low id
-    while (message && message.id < from_id) message = message.next;
-    // Add all others to message list
-    for (; message; message = message.next) messages.push(message);
+    // Include all session introductions with low from_id
+    if (from_id < 1) {
+      for (id in self.sessions) {
+        messages.push(message.join(
+          self.sessions[id].introduction,
+          self,
+          self.sessions[id]
+        ));
+      }
+    }
+
+    // Only check if there are messages >= from_id
+    if (self.messageTail && self.messageTail.id >= from_id) {
+      var message = self.messageHead;
+      // Skip over any messages with too low id
+      while (message && message.id < from_id) message = message.next;
+      // Add all others to message list
+      for (; message; message = message.next) messages.push(message);
+    }
 
     return messages;
   }

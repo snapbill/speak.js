@@ -28,8 +28,9 @@ exports.client = function(url, param, response) {
       if (message.id > last_id) last_id = message.id;
       return {
         'message': message.text,
-        'channel': message.channel,
-        'type': 'message',
+        'channel': message.channel.name,
+        'session': message.session ? message.session.id : undefined,
+        'type': message.type,
         'time': message.time};
       });
     return self.reply({'messages':messages, 'last_id': last_id});
