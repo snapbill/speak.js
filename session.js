@@ -11,6 +11,18 @@ var session = function(id, introduction) {
   self.auth = 0; //Math.floor(Math.random()*99999999);
   self.introduction = introduction;
   self.channels = [];
+  self.clients = [];
+
+  self.garbageCollect = function() {
+    // Remove all unclosed connections
+    self.clients = self.clients.filter(function(client) {
+      return client.closed == false;
+    });
+  }
+
+  self.addClient = function(client) {
+    self.clients.push(client);
+  }
 
   self.join = function(channel) {
     if (channel.addSession(self)) {
@@ -24,7 +36,7 @@ var session = function(id, introduction) {
 
   self.timeout = function() {
     self.channels.forEach(function(channel) {
-      channel.removeSession(self, 'Connection timed out.');
+      channel.removeSession(self);
     });
     self.closed = true;
   }
@@ -35,7 +47,8 @@ var session = function(id, introduction) {
 exports.garbageCollect = function() {
   var time = (new Date()).getTime();
   for (id in sessions) {
-    if (time > sessions[id].expire) {
+    sessions[id].garbageCollect();
+    if (sessions[id].clients.length == 0 && time > sessions[id].expire) {
       sessions[id].timeout();
       delete sessions[id];
     }

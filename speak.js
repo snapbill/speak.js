@@ -20,8 +20,8 @@ server.listen(function(client) {
   var current = null;
   if (client.param['session']) {
     current = session.find(client.param['session']);
-    if (!current) return client.reply({'result':'Session expired'});
-    if (client.param['auth'] != current.auth) return client.reply({'result':'Authentication incorrect'});
+    if (!current) return client.reply({'result':'Session expired', 'error_code': 'AUTH'});
+    if (client.param['auth'] != current.auth) return client.reply({'result':'Authentication incorrect', 'error_code': 'AUTH'});
 
     current.ping();
   }
@@ -62,18 +62,23 @@ server.listen(function(client) {
       });
     }
 
-    // Exit after timeout if one is provided
-    if (client.param['timeout']) {
-      setTimeout(function() {
-        if (!client.closed) client.reply_messages([]);
-      }, client.param['timeout']);
-    }
+    /**** FALL THROUGH AND WAIT ***/
   }else if (client.url == '/connect') {
     if (!client.param['introduction']) return client.reply({'result':'Include an introduction.'});
 
     var current = new session.open(client.param['introduction']);
 
-    client.reply({'result': 'ok', 'id':current.id, 'auth': current.auth});
+    // Join channels in same command if given
+    if (client.param['join']) {
+      var channels = client.param['join'];
+      if (typeof(channels) == 'string') channels = [channels];
+
+      channels.forEach(function(name) {
+        current.join(channel.open(name));
+      });
+    }
+
+    return client.reply({'result': 'ok', 'session':current.id, 'auth': current.auth});
   }else if (client.url == '/join') {
     if (!client.param['channel']) return client.reply({'result':'Include atleast one channel to join'});
     if (!current) return client.reply({'result':'You can only join channels with an active session.'});
@@ -85,8 +90,19 @@ server.listen(function(client) {
       current.join(channel.open(name));
     });
     
-    client.reply({'result': 'ok'});
+    return client.reply({'result': 'ok'});
   }else{
     return client.reply({"result":"Correct commands on /read, /write, /introduce, /test and /create"});
+  }
+
+  // Exit after timeout if one is provided
+  if (client.param['timeout']) {
+    setTimeout(function() {
+      if (!client.closed) client.reply_messages([]);
+    }, client.param['timeout']);
+  }
+
+  if (current) {
+    current.addClient(client);
   }
 });

@@ -29,7 +29,6 @@ var channel = function(name) {
   }
 
   self.addSession = function(session) {
-    console.log('#'+self.name+' joined: '+session.id+' ('+session.introduction+')');
     self.addMessage(message.join(
       session.introduction,
       self,
@@ -43,12 +42,13 @@ var channel = function(name) {
     }
   };
   self.removeSession = function(session, text) {
-    console.log('#'+self.name+' quit: '+session.id+' ('+text+')');
-    self.addMessage(message.quit(
-      text,
-      self,
-      session
-    ));
+    if (text) {
+      var msg = message.quit(text, self, session);
+    }else{
+      var msg = message.timeout(self, session);
+    }
+        
+    self.addMessage(msg);
     delete self.sessions[session.id];
   }
   self.read = function(from_id) {
