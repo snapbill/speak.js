@@ -1,4 +1,6 @@
 var id = 1;
+var total = 0,
+    removed = 0;
 
 var message = function(type, text, channel, session) {
   var self = this;
@@ -9,6 +11,11 @@ var message = function(type, text, channel, session) {
   self.channel = channel;
   self.text = text;
   self.time = (new Date()).getTime();
+
+  total++;
+  self.remove = function() {
+    removed++;
+  };
 }
 
 
@@ -24,3 +31,8 @@ exports.quit = function(text, channel, session) {
 exports.timeout = function(channel, session) {
   return new message('timeout', undefined, channel, session);
 };
+
+
+exports.stats = function() {
+  return "Messages in memory: "+(total-removed)+" / "+total;
+}
