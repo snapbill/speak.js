@@ -6,7 +6,7 @@ var sys = require("sys"),
     fs = require("fs"),  
     crypto = require("crypto"),
     config = require("./config"),
-    client = require("./client").client;  
+    client = require("./client");  
   
 
 var keys = config.get('ssl');
@@ -26,16 +26,20 @@ var createServer = function(options, clientHandler) {
 
   // Set up listener, and listen
   server.addListener('request', function (request, response) {
+    var params = url.parse(request.url, true);
+    var currentClient = new client.client(params['pathname'], params['query'] || {}, response);
+
     var data = '';  
     request.addListener('data', function(chunk) { data += chunk; });  
 
-    // When request is in
-    request.addListener("end", function() {  
-      var params = url.parse(request.url, true);
+    // Close connection on receiving FIN packet
+    request.connection.addListener('end', function() { request.connection.end(); });
+    request.connection.addListener('close', function() {
+      if (!currentClient.closed) currentClient.close();
+    });
 
-      clientHandler(new client(params['pathname'], params['query'] || {}, response));
-    });  
-  
+    // When request is in
+    request.addListener("end", function() {  clientHandler(currentClient); });  
   });
 	console.log('Listen on '+options['host']+':'+options['port']);
   server.listen(options['port'], options['host']);

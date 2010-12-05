@@ -6,7 +6,12 @@ exports.client = function(url, param, response) {
   self.param = param;
   self.response = response;
 
+  self.close = function() {
+    self.closed = true;
+  }
   self.reply = function(obj) {
+    self.closed = true;
+
     response.writeHead(200, {'Content-Type': 'text/plain'});
 
     if ('aux' in self.param) obj['aux'] = self.param['aux'];
@@ -18,7 +23,6 @@ exports.client = function(url, param, response) {
     if ('callback' in self.param) response.write(');');
 
     response.end();
-    self.closed = true;
   };
 
 
