@@ -93,6 +93,8 @@ server.listen(function(client) {
     return client.reply({'result': 'ok'});
   }else if (client.url == '/stats') {
     return client.reply({'channel': channel.stats(), 'message': message.stats()});
+  }else if (client.url == '/image-test') {
+    return client.reply_base64('R0lGODlhAQABAIAAAP///////yH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==', 'image/gif');
   }else{
     return client.reply({"result":"Correct commands on /read, /write, /introduce, /test and /create"});
   }

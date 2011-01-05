@@ -9,6 +9,15 @@ exports.client = function(url, param, response) {
   self.close = function() {
     self.closed = true;
   }
+  self.reply_base64 = function(data, content_type) {
+    self.closed = true;
+    if (!content_type) content_type = 'application/octet-stream';
+
+    var buff = new Buffer(data, 'base64');
+    response.writeHead(200, {'Content-Type': content_type});
+    response.write(buff);
+    response.end();
+  };
   self.reply = function(obj) {
     self.closed = true;
 
@@ -24,8 +33,6 @@ exports.client = function(url, param, response) {
 
     response.end();
   };
-
-
   self.reply_messages = function(messages) {
     var last_id = 0;
     messages = messages.map(function(message) {
