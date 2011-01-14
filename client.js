@@ -21,7 +21,7 @@ exports.client = function(url, param, response) {
   self.reply = function(obj) {
     self.closed = true;
 
-    response.writeHead(200, {'Content-Type': 'text/plain'});
+    response.writeHead(200, {'Content-Type': 'application/javascript'});
 
     if ('aux' in self.param) obj['aux'] = self.param['aux'];
 
